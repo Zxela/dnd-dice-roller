@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="D&D Dice Roller - Roll dice for your tabletop RPG adventures">
+  <title>D&D Dice Roller</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1 class="app-title">D&D Dice Roller</h1>
+      <div class="header-controls">
+        <button class="header-btn" id="sound-toggle" aria-label="Toggle sound">
+          <span aria-hidden="true">&#128266;</span>
+        </button>
+        <button class="header-btn" id="settings-toggle" aria-label="Open settings">
+          <span aria-hidden="true">&#9881;</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Roll Display Area -->
+      <section class="roll-display" aria-label="Roll results">
+        <div class="dice-container" id="dice-container">
+          <!-- Dice visuals will be rendered here -->
+        </div>
+        <div class="total-value" id="total-value">--</div>
+        <div class="roll-breakdown" id="roll-breakdown">
+          Roll some dice to get started!
+        </div>
+      </section>
+
+      <!-- Text Input Form -->
+      <form class="input-section" id="dice-form">
+        <label for="dice-input" class="visually-hidden">Dice notation</label>
+        <input
+          type="text"
+          class="dice-input"
+          id="dice-input"
+          name="dice-notation"
+          placeholder="Enter dice notation (e.g., 2d6+3, 1d20 advantage)"
+          autocomplete="off"
+        >
+        <button type="submit" class="roll-btn" id="roll-btn">Roll</button>
+      </form>
+
+      <!-- Quick Dice Buttons -->
+      <section class="quick-dice" aria-label="Quick dice buttons">
+        <button class="quick-dice-btn" data-dice="d4">d4</button>
+        <button class="quick-dice-btn" data-dice="d6">d6</button>
+        <button class="quick-dice-btn" data-dice="d8">d8</button>
+        <button class="quick-dice-btn" data-dice="d10">d10</button>
+        <button class="quick-dice-btn" data-dice="d12">d12</button>
+        <button class="quick-dice-btn" data-dice="d20">d20</button>
+        <button class="quick-dice-btn" data-dice="d100">d100</button>
+      </section>
+
+      <!-- Panels Section -->
+      <section class="panels-section">
+        <!-- Presets Panel -->
+        <aside class="panel presets-panel" aria-label="Saved presets">
+          <div class="panel-header">
+            <h2 class="panel-title">Presets</h2>
+          </div>
+          <div class="panel-content" id="presets-panel">
+            <p>No presets saved yet.</p>
+          </div>
+        </aside>
+
+        <!-- History Panel -->
+        <aside class="panel history-panel" aria-label="Roll history">
+          <div class="panel-header">
+            <h2 class="panel-title">History</h2>
+          </div>
+          <div class="panel-content" id="history-panel">
+            <p>No rolls yet.</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <!-- Scripts will be added in later tasks -->
+</body>
+</html>

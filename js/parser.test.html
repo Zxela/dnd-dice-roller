@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parser Tests - D&amp;D Dice Roller</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 {
+      color: #e94560;
+      border-bottom: 2px solid #e94560;
+      padding-bottom: 10px;
+    }
+    .test-suite {
+      margin: 20px 0;
+    }
+    .test-suite h2 {
+      color: #0f3460;
+      background: #16213e;
+      padding: 10px;
+      border-radius: 4px;
+      color: #eee;
+    }
+    .test {
+      padding: 10px 15px;
+      margin: 5px 0;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .test.pass {
+      background: #1b4332;
+      border-left: 4px solid #40916c;
+    }
+    .test.fail {
+      background: #5c1a1a;
+      border-left: 4px solid #e94560;
+    }
+    .test-name {
+      font-weight: 500;
+    }
+    .test-status {
+      font-weight: bold;
+    }
+    .test.pass .test-status {
+      color: #40916c;
+    }
+    .test.fail .test-status {
+      color: #e94560;
+    }
+    .error-details {
+      font-size: 0.85em;
+      color: #ff8a8a;
+      margin-top: 5px;
+      padding: 5px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+      word-break: break-word;
+    }
+    .summary {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      text-align: center;
+    }
+    .summary.all-pass {
+      background: #1b4332;
+      border: 2px solid #40916c;
+    }
+    .summary.has-fail {
+      background: #5c1a1a;
+      border: 2px solid #e94560;
+    }
+  </style>
+</head>
+<body>
+  <h1>Parser Tests</h1>
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <script type="module">
+    import { parse } from './parser.js';
+
+    const results = [];
+
+    function deepEqual(a, b) {
+      if (a === b) return true;
+      if (a === null || b === null) return a === b;
+      if (typeof a !== 'object' || typeof b !== 'object') return false;
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      if (keysA.length !== keysB.length) return false;
+      for (const key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!deepEqual(a[key], b[key])) return false;
+      }
+      return true;
+    }
+
+    function test(name, fn) {
+      try {
+        fn();
+        results.push({ name, pass: true });
+      } catch (e) {
+        results.push({ name, pass: false, error: e.message });
+      }
+    }
+
+    function expect(actual) {
+      return {
+        toEqual(expected) {
+          if (!deepEqual(actual, expected)) {
+            throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+          }
+        },
+        toThrow() {
+          // This is used differently - see test cases
+        }
+      };
+    }
+
+    function expectToThrow(fn) {
+      try {
+        fn();
+        throw new Error('Expected function to throw but it did not');
+      } catch (e) {
+        if (e.message === 'Expected function to throw but it did not') {
+          throw e;
+        }
+        // Success - it threw
+      }
+    }
+
+    // Helper to create expected dice with defaults
+    function dice(overrides = {}) {
+      return {
+        count: 1,
+        sides: 20,
+        keep: null,
+        drop: null,
+        exploding: false,
+        reroll: null,
+        ...overrides
+      };
+    }
+
+    // Basic notation tests
+    test('parse("1d20") - basic d20', () => {
+      const result = parse('1d20');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20 })],
+        modifier: 0
+      });
+    });
+
+    test('parse("2d6") - multiple dice', () => {
+      const result = parse('2d6');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6 })],
+        modifier: 0
+      });
+    });
+
+    test('parse("1d100") - percentile', () => {
+      const result = parse('1d100');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 100 })],
+        modifier: 0
+      });
+    });
+
+    test('parse("d20") - without count', () => {
+      const result = parse('d20');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20 })],
+        modifier: 0
+      });
+    });
+
+    test('parse("1d%") - percent shorthand', () => {
+      const result = parse('1d%');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 100 })],
+        modifier: 0
+      });
+    });
+
+    // Modifier tests
+    test('parse("1d20+5") - positive modifier', () => {
+      const result = parse('1d20+5');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20 })],
+        modifier: 5
+      });
+    });
+
+    test('parse("2d6+3") - example from spec', () => {
+      const result = parse('2d6+3');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6 })],
+        modifier: 3
+      });
+    });
+
+    test('parse("2d6-2") - negative modifier', () => {
+      const result = parse('2d6-2');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6 })],
+        modifier: -2
+      });
+    });
+
+    test('parse("1d20+5-2") - multiple modifiers', () => {
+      const result = parse('1d20+5-2');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20 })],
+        modifier: 3
+      });
+    });
+
+    // Keep highest/lowest tests
+    test('parse("2d20kh1") - keep highest 1', () => {
+      const result = parse('2d20kh1');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 20, keep: { type: 'highest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("2d20kl1") - keep lowest 1', () => {
+      const result = parse('2d20kl1');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 20, keep: { type: 'lowest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("4d6kh3") - keep highest 3', () => {
+      const result = parse('4d6kh3');
+      expect(result).toEqual({
+        dice: [dice({ count: 4, sides: 6, keep: { type: 'highest', count: 3 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("2d20kh") - keep highest without count defaults to 1', () => {
+      const result = parse('2d20kh');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 20, keep: { type: 'highest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    // Drop highest/lowest tests
+    test('parse("4d6dl1") - drop lowest 1', () => {
+      const result = parse('4d6dl1');
+      expect(result).toEqual({
+        dice: [dice({ count: 4, sides: 6, drop: { type: 'lowest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("4d6dh1") - drop highest 1', () => {
+      const result = parse('4d6dh1');
+      expect(result).toEqual({
+        dice: [dice({ count: 4, sides: 6, drop: { type: 'highest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("5d10dl2") - drop lowest 2', () => {
+      const result = parse('5d10dl2');
+      expect(result).toEqual({
+        dice: [dice({ count: 5, sides: 10, drop: { type: 'lowest', count: 2 } })],
+        modifier: 0
+      });
+    });
+
+    // Exploding dice tests
+    test('parse("1d6!") - exploding dice', () => {
+      const result = parse('1d6!');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 6, exploding: true })],
+        modifier: 0
+      });
+    });
+
+    test('parse("2d10!") - multiple exploding dice', () => {
+      const result = parse('2d10!');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 10, exploding: true })],
+        modifier: 0
+      });
+    });
+
+    // Reroll tests
+    test('parse("2d6r1") - reroll 1s', () => {
+      const result = parse('2d6r1');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6, reroll: 1 })],
+        modifier: 0
+      });
+    });
+
+    test('parse("1d20r2") - reroll 2s', () => {
+      const result = parse('1d20r2');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20, reroll: 2 })],
+        modifier: 0
+      });
+    });
+
+    // Combined tests
+    test('parse("4d6dl1+2") - drop lowest with modifier', () => {
+      const result = parse('4d6dl1+2');
+      expect(result).toEqual({
+        dice: [dice({ count: 4, sides: 6, drop: { type: 'lowest', count: 1 } })],
+        modifier: 2
+      });
+    });
+
+    test('parse("2d20kh1+5") - keep highest with modifier', () => {
+      const result = parse('2d20kh1+5');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 20, keep: { type: 'highest', count: 1 } })],
+        modifier: 5
+      });
+    });
+
+    test('parse("1d6!+3") - exploding with modifier', () => {
+      const result = parse('1d6!+3');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 6, exploding: true })],
+        modifier: 3
+      });
+    });
+
+    test('parse("2d6r1+2") - reroll with modifier', () => {
+      const result = parse('2d6r1+2');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6, reroll: 1 })],
+        modifier: 2
+      });
+    });
+
+    test('parse("4d6dl1kh3") - multiple modifiers on dice', () => {
+      const result = parse('4d6dl1kh3');
+      expect(result).toEqual({
+        dice: [dice({ count: 4, sides: 6, drop: { type: 'lowest', count: 1 }, keep: { type: 'highest', count: 3 } })],
+        modifier: 0
+      });
+    });
+
+    test('parse("2d6!r1") - exploding and reroll', () => {
+      const result = parse('2d6!r1');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 6, exploding: true, reroll: 1 })],
+        modifier: 0
+      });
+    });
+
+    // Case insensitivity
+    test('parse("2D20KH1") - uppercase notation', () => {
+      const result = parse('2D20KH1');
+      expect(result).toEqual({
+        dice: [dice({ count: 2, sides: 20, keep: { type: 'highest', count: 1 } })],
+        modifier: 0
+      });
+    });
+
+    // Whitespace handling
+    test('parse(" 1d20 + 5 ") - with whitespace', () => {
+      const result = parse(' 1d20 + 5 ');
+      expect(result).toEqual({
+        dice: [dice({ count: 1, sides: 20 })],
+        modifier: 5
+      });
+    });
+
+    // Error cases
+    test('parse("invalid") - throws for invalid input', () => {
+      expectToThrow(() => parse('invalid'));
+    });
+
+    test('parse("") - throws for empty string', () => {
+      expectToThrow(() => parse(''));
+    });
+
+    test('parse(null) - throws for null', () => {
+      expectToThrow(() => parse(null));
+    });
+
+    test('parse("d") - throws for incomplete dice', () => {
+      expectToThrow(() => parse('d'));
+    });
+
+    test('parse("1dx") - throws for invalid sides', () => {
+      expectToThrow(() => parse('1dx'));
+    });
+
+    test('parse("1d20r") - throws for incomplete reroll', () => {
+      expectToThrow(() => parse('1d20r'));
+    });
+
+    // Render results
+    const container = document.getElementById('results');
+    const summary = document.getElementById('summary');
+
+    let passCount = 0;
+    let failCount = 0;
+
+    results.forEach(result => {
+      const div = document.createElement('div');
+      div.className = `test ${result.pass ? 'pass' : 'fail'}`;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'test-name';
+      nameSpan.textContent = result.name;
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'test-status';
+      statusSpan.textContent = result.pass ? 'PASS' : 'FAIL';
+
+      div.appendChild(nameSpan);
+      div.appendChild(statusSpan);
+
+      if (!result.pass && result.error) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-details';
+        errorDiv.textContent = result.error;
+        div.appendChild(errorDiv);
+      }
+
+      container.appendChild(div);
+
+      if (result.pass) {
+        passCount++;
+      } else {
+        failCount++;
+      }
+    });
+
+    summary.className = `summary ${failCount === 0 ? 'all-pass' : 'has-fail'}`;
+    summary.textContent = `${passCount} passed, ${failCount} failed out of ${results.length} tests`;
+  </script>
+</body>
+</html>

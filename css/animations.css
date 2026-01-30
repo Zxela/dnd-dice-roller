@@ -1,0 +1,149 @@
+/* ==========================================================================
+   D&D Dice Roller - Animations
+   CSS keyframe animations for dice rolling effects
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Keyframe Animations
+   -------------------------------------------------------------------------- */
+
+/* Main dice tumbling animation - 1.5s duration */
+@keyframes dice-tumble {
+  0% {
+    transform: translateY(-20px) rotateX(0deg) rotateY(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) rotateX(720deg) rotateY(540deg);
+    opacity: 1;
+  }
+}
+
+/* Subtle pulse animation for highlighted dice */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--glow-color, #e94560);
+  }
+  50% {
+    box-shadow: 0 0 16px var(--glow-color, #e94560);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Rolling State
+   -------------------------------------------------------------------------- */
+
+/* Dice actively rolling/tumbling */
+.die-rolling {
+  animation: dice-tumble 1.5s ease-out forwards;
+  /* Support for staggered animation delay via CSS variable */
+  animation-delay: var(--animation-delay, 0s);
+}
+
+/* --------------------------------------------------------------------------
+   Result States
+   -------------------------------------------------------------------------- */
+
+/* Base result state - revealed dice with smooth transition */
+.die-result {
+  /* Smooth 60fps transitions using transform and opacity only */
+  transition: transform 0.3s ease-out,
+              opacity 0.3s ease-out,
+              border-color 0.3s ease-out,
+              box-shadow 0.3s ease-out;
+  /* Default styling */
+  background-color: #16213e;
+  border: 2px solid #0f3460;
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Dropped Dice State (Keep/Drop mechanics)
+   -------------------------------------------------------------------------- */
+
+/* Dropped dice - grayed out and struck through */
+.die-result.dropped {
+  background-color: #1f2937;
+  color: #6b7280;
+  text-decoration: line-through;
+  opacity: 0.6;
+  transform: scale(0.9);
+}
+
+/* --------------------------------------------------------------------------
+   Highlight State (Kept dice)
+   -------------------------------------------------------------------------- */
+
+/* Kept/highlighted dice - scaled up with glow */
+.die-result.highlight {
+  border: 2px solid #e94560;
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.5);
+  --glow-color: #e94560;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Critical Roll States
+   -------------------------------------------------------------------------- */
+
+/* Natural 20 - Green glow for critical success */
+.die-result.nat20 {
+  border: 2px solid #4ade80;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.6);
+  --glow-color: #4ade80;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* Natural 1 - Red glow for critical failure */
+.die-result.nat1 {
+  border: 2px solid #f87171;
+  box-shadow: 0 0 16px rgba(248, 113, 113, 0.6);
+  --glow-color: #f87171;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Staggered Animation Support
+   -------------------------------------------------------------------------- */
+
+/*
+ * Use --animation-delay CSS variable to stagger dice animations
+ * Example usage in JavaScript:
+ * die.style.setProperty('--animation-delay', `${index * 0.1}s`);
+ */
+
+/* Predefined delay classes for convenience */
+.die-delay-1 { --animation-delay: 0.1s; }
+.die-delay-2 { --animation-delay: 0.2s; }
+.die-delay-3 { --animation-delay: 0.3s; }
+.die-delay-4 { --animation-delay: 0.4s; }
+.die-delay-5 { --animation-delay: 0.5s; }
+.die-delay-6 { --animation-delay: 0.6s; }
+.die-delay-7 { --animation-delay: 0.7s; }
+.die-delay-8 { --animation-delay: 0.8s; }
+
+/* --------------------------------------------------------------------------
+   Reduced Motion Support
+   -------------------------------------------------------------------------- */
+
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .die-rolling {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .die-result,
+  .die-result.highlight,
+  .die-result.nat20,
+  .die-result.nat1 {
+    animation: none;
+    transition: none;
+  }
+}

@@ -64,24 +64,26 @@
       <!-- Panels Section -->
       <section class="panels-section">
         <!-- Presets Panel -->
-        <aside class="panel presets-panel" aria-label="Saved presets">
-          <div class="panel-header">
+        <details class="panel presets-panel collapsible-panel" aria-label="Saved presets" open>
+          <summary class="panel-header panel-toggle">
             <h2 class="panel-title">Presets</h2>
-          </div>
+            <span class="panel-toggle-icon" aria-hidden="true"></span>
+          </summary>
           <div class="panel-content" id="presets-panel">
             <p>No presets saved yet.</p>
           </div>
-        </aside>
+        </details>
 
         <!-- History Panel -->
-        <aside class="panel history-panel" aria-label="Roll history">
-          <div class="panel-header">
+        <details class="panel history-panel collapsible-panel" aria-label="Roll history" open>
+          <summary class="panel-header panel-toggle">
             <h2 class="panel-title">History</h2>
-          </div>
+            <span class="panel-toggle-icon" aria-hidden="true"></span>
+          </summary>
           <div class="panel-content" id="history-panel">
             <p>No rolls yet.</p>
           </div>
-        </aside>
+        </details>
       </section>
     </main>
   </div>

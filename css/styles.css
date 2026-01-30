@@ -240,10 +240,69 @@ body {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
 .panel-content {
   color: var(--color-text-secondary);
+}
+
+/* Collapsible Panel Styles */
+.collapsible-panel {
+  /* Reset details element styling */
+}
+
+.collapsible-panel > .panel-toggle {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+/* Remove default marker in different browsers */
+.collapsible-panel > .panel-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-panel > .panel-toggle::marker {
+  display: none;
+  content: '';
+}
+
+/* Toggle icon */
+.panel-toggle-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--color-text-secondary);
+  transition: transform var(--transition-normal);
+}
+
+.collapsible-panel[open] > .panel-toggle .panel-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Panel content animation */
+.collapsible-panel > .panel-content {
+  overflow: hidden;
+  animation: panel-slide-down var(--transition-normal) ease-out;
+}
+
+@keyframes panel-slide-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+/* Smooth close transition - using transition on the details[open] state */
+.collapsible-panel:not([open]) > .panel-content {
+  display: none;
 }
 
 /* Presets Panel */
@@ -380,4 +439,174 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ==========================================================================
+   Focus States for Accessibility
+   ========================================================================== */
+
+/* Global focus outline style */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users, keep for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Visible focus for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Header buttons focus */
+.header-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  background: var(--color-secondary);
+}
+
+/* Input focus - already has border style, add ring */
+.dice-input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.3);
+}
+
+/* Roll button focus */
+.roll-btn:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/* Quick dice buttons focus */
+.quick-dice-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  background: var(--color-primary);
+}
+
+/* Panel toggle focus (details/summary) */
+.panel-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* Clear history button focus */
+.clear-history-btn:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Mobile Responsive Styles
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Container adjustments */
+  .app-container {
+    padding: var(--spacing-sm);
+  }
+
+  /* Header mobile adjustments */
+  .app-header {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .app-title {
+    font-size: 1.25rem;
+  }
+
+  .header-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Roll display mobile scaling */
+  .roll-display {
+    padding: var(--spacing-md);
+  }
+
+  .dice-container {
+    min-height: 60px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .total-value {
+    font-size: 2.5rem;
+  }
+
+  .roll-breakdown {
+    font-size: 0.875rem;
+  }
+
+  /* Input section mobile - stack vertically */
+  .input-section {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .dice-input {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .roll-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: var(--spacing-md);
+  }
+
+  /* Quick dice buttons - mobile layout (4 top, 2+d100 bottom) */
+  .quick-dice {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .quick-dice-btn {
+    min-width: unset;
+    min-height: 44px;
+    padding: var(--spacing-sm);
+    font-size: 0.875rem;
+  }
+
+  /* d12 and d20 in second row */
+  .quick-dice-btn:nth-child(5),
+  .quick-dice-btn:nth-child(6) {
+    grid-column: span 1;
+  }
+
+  /* d100 spans 2 columns in second row */
+  .quick-dice-btn:nth-child(7) {
+    grid-column: span 2;
+  }
+
+  /* Panels section - stack vertically */
+  .panels-section {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .panel {
+    padding: var(--spacing-md);
+  }
+
+  .panel-title {
+    font-size: 1rem;
+  }
+
+  /* History panel mobile adjustments */
+  .history-panel .panel-content {
+    max-height: 200px;
+  }
 }

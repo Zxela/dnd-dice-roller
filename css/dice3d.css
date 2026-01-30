@@ -1,0 +1,400 @@
+/* ==========================================================================
+   3D Dice - CSS 3D Transformed Dice
+   Real 3D cubes that tumble and land on the correct face
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Container Setup
+   -------------------------------------------------------------------------- */
+
+.dice-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  perspective: 600px;
+  min-height: 120px;
+  padding: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   3D Die Wrapper
+   -------------------------------------------------------------------------- */
+
+.die-3d {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease-out;
+}
+
+.die-3d.rolling {
+  animation: dice-tumble-3d var(--roll-duration, 1.5s) ease-out forwards;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+/* --------------------------------------------------------------------------
+   Die Cube Structure
+   -------------------------------------------------------------------------- */
+
+.die-cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(0deg) rotateY(0deg);
+}
+
+.die-face {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(145deg, #1e3a5f, #16213e);
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+  backface-visibility: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Face positions for a cube */
+.die-face-1 { transform: rotateY(0deg) translateZ(30px); }
+.die-face-2 { transform: rotateY(180deg) translateZ(30px); }
+.die-face-3 { transform: rotateY(90deg) translateZ(30px); }
+.die-face-4 { transform: rotateY(-90deg) translateZ(30px); }
+.die-face-5 { transform: rotateX(90deg) translateZ(30px); }
+.die-face-6 { transform: rotateX(-90deg) translateZ(30px); }
+
+/* --------------------------------------------------------------------------
+   D6 Pip Patterns
+   -------------------------------------------------------------------------- */
+
+.die-d6 .die-face {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 8px;
+  gap: 2px;
+}
+
+.pip {
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #ffffff, #c0c0c0);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Position pips using grid areas */
+/* Face 1: center */
+.die-d6 .die-face-1 .pip { grid-area: 2 / 2; }
+
+/* Face 2: top-right, bottom-left */
+.die-d6 .die-face-2 .pip:nth-child(1) { grid-area: 1 / 3; }
+.die-d6 .die-face-2 .pip:nth-child(2) { grid-area: 3 / 1; }
+
+/* Face 3: top-right, center, bottom-left */
+.die-d6 .die-face-3 .pip:nth-child(1) { grid-area: 1 / 3; }
+.die-d6 .die-face-3 .pip:nth-child(2) { grid-area: 2 / 2; }
+.die-d6 .die-face-3 .pip:nth-child(3) { grid-area: 3 / 1; }
+
+/* Face 4: corners */
+.die-d6 .die-face-4 .pip:nth-child(1) { grid-area: 1 / 1; }
+.die-d6 .die-face-4 .pip:nth-child(2) { grid-area: 1 / 3; }
+.die-d6 .die-face-4 .pip:nth-child(3) { grid-area: 3 / 1; }
+.die-d6 .die-face-4 .pip:nth-child(4) { grid-area: 3 / 3; }
+
+/* Face 5: corners + center */
+.die-d6 .die-face-5 .pip:nth-child(1) { grid-area: 1 / 1; }
+.die-d6 .die-face-5 .pip:nth-child(2) { grid-area: 1 / 3; }
+.die-d6 .die-face-5 .pip:nth-child(3) { grid-area: 2 / 2; }
+.die-d6 .die-face-5 .pip:nth-child(4) { grid-area: 3 / 1; }
+.die-d6 .die-face-5 .pip:nth-child(5) { grid-area: 3 / 3; }
+
+/* Face 6: two columns of 3 */
+.die-d6 .die-face-6 .pip:nth-child(1) { grid-area: 1 / 1; }
+.die-d6 .die-face-6 .pip:nth-child(2) { grid-area: 1 / 3; }
+.die-d6 .die-face-6 .pip:nth-child(3) { grid-area: 2 / 1; }
+.die-d6 .die-face-6 .pip:nth-child(4) { grid-area: 2 / 3; }
+.die-d6 .die-face-6 .pip:nth-child(5) { grid-area: 3 / 1; }
+.die-d6 .die-face-6 .pip:nth-child(6) { grid-area: 3 / 3; }
+
+/* --------------------------------------------------------------------------
+   Other Dice Types (Numbered Faces)
+   -------------------------------------------------------------------------- */
+
+/* D4 - Tetrahedron style (triangle base) */
+.die-d4 {
+  width: 55px;
+  height: 55px;
+}
+
+.die-d4 .die-cube {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.die-d4 .die-face {
+  width: 55px;
+  height: 55px;
+  clip-path: polygon(50% 5%, 5% 95%, 95% 95%);
+  background: linear-gradient(180deg, #2d1b4e, #1a1a2e);
+  border: none;
+}
+
+/* D8 - Octahedron style */
+.die-d8 .die-face {
+  background: linear-gradient(145deg, #1b3d2f, #162e23);
+}
+
+/* D10 - Decahedron style */
+.die-d10 {
+  width: 55px;
+  height: 65px;
+}
+
+.die-d10 .die-face {
+  width: 55px;
+  height: 65px;
+  clip-path: polygon(50% 0%, 100% 35%, 100% 70%, 50% 100%, 0% 70%, 0% 35%);
+  background: linear-gradient(145deg, #4a1942, #2d1028);
+}
+
+/* D12 - Dodecahedron style */
+.die-d12 .die-face {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  background: linear-gradient(145deg, #3d2b1f, #2a1d15);
+}
+
+/* D20 - Icosahedron style */
+.die-d20 {
+  width: 65px;
+  height: 65px;
+}
+
+.die-d20 .die-face {
+  width: 65px;
+  height: 65px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background: linear-gradient(145deg, #1f3d5c, #162a3e);
+}
+
+/* D100 */
+.die-d100 {
+  width: 70px;
+  height: 70px;
+}
+
+.die-d100 .die-face {
+  width: 70px;
+  height: 70px;
+  font-size: 18px;
+  background: linear-gradient(145deg, #4a3d1f, #2d2510);
+}
+
+/* --------------------------------------------------------------------------
+   3D Tumble Animation
+   -------------------------------------------------------------------------- */
+
+@keyframes dice-tumble-3d {
+  0% {
+    transform: translateY(-100px) translateZ(100px)
+               rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(-30px) translateZ(50px)
+               rotateX(270deg) rotateY(180deg) rotateZ(90deg);
+  }
+  50% {
+    transform: translateY(10px) translateZ(20px)
+               rotateX(540deg) rotateY(360deg) rotateZ(180deg);
+  }
+  75% {
+    transform: translateY(-5px) translateZ(10px)
+               rotateX(630deg) rotateY(450deg) rotateZ(225deg);
+  }
+  100% {
+    transform: translateY(0) translateZ(0)
+               rotateX(var(--final-x, 0deg))
+               rotateY(var(--final-y, 0deg))
+               rotateZ(var(--final-z, 0deg));
+    opacity: 1;
+  }
+}
+
+/* Bounce landing effect */
+@keyframes dice-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* --------------------------------------------------------------------------
+   Result States
+   -------------------------------------------------------------------------- */
+
+.die-3d.result {
+  animation: dice-bounce 0.3s ease-out;
+}
+
+.die-3d.dropped {
+  opacity: 0.5;
+  transform: scale(0.85);
+}
+
+.die-3d.dropped .die-face {
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a) !important;
+  color: #666;
+}
+
+.die-3d.nat20 .die-face {
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.6),
+              inset 0 0 20px rgba(74, 222, 128, 0.2);
+}
+
+.die-3d.nat1 .die-face {
+  border-color: #f87171;
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.6),
+              inset 0 0 20px rgba(248, 113, 113, 0.2);
+}
+
+/* Glow pulse for crits */
+@keyframes crit-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+.die-3d.nat20,
+.die-3d.nat1 {
+  animation: crit-pulse 1s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Landing Rotations (to show specific face)
+   -------------------------------------------------------------------------- */
+
+/* For d6: which face is "up" based on rotation */
+/* Face 1 (front) up: rotateX(-90deg) */
+/* Face 2 (back) up: rotateX(90deg) */
+/* Face 3 (right) up: rotateZ(90deg) rotateY(90deg) */
+/* Face 4 (left) up: rotateZ(-90deg) rotateY(-90deg) */
+/* Face 5 (top) up: rotateX(0deg) */
+/* Face 6 (bottom) up: rotateX(180deg) */
+
+.die-3d[data-result="1"] { --final-x: -90deg; --final-y: 0deg; --final-z: 0deg; }
+.die-3d[data-result="2"] { --final-x: 90deg; --final-y: 0deg; --final-z: 0deg; }
+.die-3d[data-result="3"] { --final-x: 0deg; --final-y: -90deg; --final-z: 0deg; }
+.die-3d[data-result="4"] { --final-x: 0deg; --final-y: 90deg; --final-z: 0deg; }
+.die-3d[data-result="5"] { --final-x: 0deg; --final-y: 0deg; --final-z: 0deg; }
+.die-3d[data-result="6"] { --final-x: 180deg; --final-y: 0deg; --final-z: 0deg; }
+
+/* For higher dice, add some random-looking rotation that lands face-up */
+.die-3d[data-result="7"] { --final-x: -90deg; --final-y: 45deg; --final-z: 0deg; }
+.die-3d[data-result="8"] { --final-x: 90deg; --final-y: -45deg; --final-z: 0deg; }
+.die-3d[data-result="9"] { --final-x: 0deg; --final-y: 90deg; --final-z: 45deg; }
+.die-3d[data-result="10"] { --final-x: 0deg; --final-y: -90deg; --final-z: -45deg; }
+.die-3d[data-result="11"] { --final-x: 45deg; --final-y: 0deg; --final-z: 0deg; }
+.die-3d[data-result="12"] { --final-x: -45deg; --final-y: 0deg; --final-z: 0deg; }
+.die-3d[data-result="13"] { --final-x: 0deg; --final-y: 45deg; --final-z: 0deg; }
+.die-3d[data-result="14"] { --final-x: 0deg; --final-y: -45deg; --final-z: 0deg; }
+.die-3d[data-result="15"] { --final-x: 45deg; --final-y: 45deg; --final-z: 0deg; }
+.die-3d[data-result="16"] { --final-x: -45deg; --final-y: -45deg; --final-z: 0deg; }
+.die-3d[data-result="17"] { --final-x: 45deg; --final-y: 0deg; --final-z: 45deg; }
+.die-3d[data-result="18"] { --final-x: -45deg; --final-y: 0deg; --final-z: -45deg; }
+.die-3d[data-result="19"] { --final-x: 0deg; --final-y: 45deg; --final-z: 45deg; }
+.die-3d[data-result="20"] { --final-x: -90deg; --final-y: 180deg; --final-z: 0deg; }
+
+/* --------------------------------------------------------------------------
+   Result Value Overlay (for non-d6 dice)
+   -------------------------------------------------------------------------- */
+
+.die-3d .result-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateZ(35px);
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8),
+               0 0 10px rgba(233, 69, 96, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+}
+
+.die-3d.show-result .result-value {
+  opacity: 1;
+}
+
+/* Smaller font for d100 */
+.die-d100 .result-value {
+  font-size: 22px;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion Support
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .die-3d.rolling {
+    animation: none;
+    transform: rotateX(var(--final-x, 0deg))
+               rotateY(var(--final-y, 0deg))
+               rotateZ(var(--final-z, 0deg));
+  }
+
+  .die-3d.nat20,
+  .die-3d.nat1 {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Adjustments
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .dice-container {
+    gap: 15px;
+    perspective: 400px;
+  }
+
+  .die-3d {
+    width: 50px;
+    height: 50px;
+  }
+
+  .die-face {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .die-face-1 { transform: rotateY(0deg) translateZ(25px); }
+  .die-face-2 { transform: rotateY(180deg) translateZ(25px); }
+  .die-face-3 { transform: rotateY(90deg) translateZ(25px); }
+  .die-face-4 { transform: rotateY(-90deg) translateZ(25px); }
+  .die-face-5 { transform: rotateX(90deg) translateZ(25px); }
+  .die-face-6 { transform: rotateX(-90deg) translateZ(25px); }
+
+  .die-3d .result-value {
+    font-size: 22px;
+    transform: translate(-50%, -50%) translateZ(28px);
+  }
+
+  .pip {
+    width: 8px;
+    height: 8px;
+  }
+}

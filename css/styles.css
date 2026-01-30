@@ -89,10 +89,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--spacing-md);
-  min-height: 80px;
+  gap: var(--spacing-lg);
+  min-height: 140px;
   margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
+  perspective: 600px;
 }
 
 .total-value {

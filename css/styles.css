@@ -155,6 +155,27 @@ body {
   transform: translateY(0);
 }
 
+.roll-btn:disabled,
+.dice-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input Error Styles */
+.input-error {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(248, 113, 113, 0.1);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-danger);
+}
+
+.dice-input.input-error-state {
+  border-color: var(--color-danger);
+}
+
 /* Quick Dice Section */
 .quick-dice {
   display: flex;

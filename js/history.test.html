@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Module Tests</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .test-result {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .test-pass {
+      background: rgba(74, 222, 128, 0.2);
+      border-left: 3px solid #4ade80;
+    }
+    .test-fail {
+      background: rgba(248, 113, 113, 0.2);
+      border-left: 3px solid #f87171;
+    }
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+    #test-results {
+      margin-bottom: 30px;
+    }
+    .demo-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #16213e;
+      border-radius: 8px;
+    }
+    .demo-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #d63d56;
+    }
+    #history-panel {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>History Module Tests</h1>
+
+  <div id="test-results"></div>
+
+  <div class="demo-section">
+    <h2>Interactive Demo</h2>
+    <div class="demo-controls">
+      <button id="add-roll-btn">Add Sample Roll</button>
+      <button id="add-advantage-btn">Add Advantage Roll</button>
+      <button id="add-exploding-btn">Add Exploding Roll</button>
+    </div>
+
+    <div class="panel history-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">History</h2>
+      </div>
+      <div class="panel-content" id="history-panel">
+        <p>No rolls yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initHistory, addRoll, getHistory, clearHistory, getHistoryLimit } from './history.js';
+    import * as storage from './storage.js';
+
+    const resultsDiv = document.getElementById('test-results');
+    let passCount = 0;
+    let failCount = 0;
+
+    function log(message, passed) {
+      const div = document.createElement('div');
+      div.className = 'test-result ' + (passed ? 'test-pass' : 'test-fail');
+      div.textContent = (passed ? '✓ ' : '✗ ') + message;
+      resultsDiv.appendChild(div);
+      if (passed) passCount++;
+      else failCount++;
+    }
+
+    function assert(condition, message) {
+      log(message, condition);
+    }
+
+    // Clear any existing history before tests
+    storage.remove('history');
+
+    // Test 1: Module exports
+    assert(typeof initHistory === 'function', 'initHistory is exported as function');
+    assert(typeof addRoll === 'function', 'addRoll is exported as function');
+    assert(typeof getHistory === 'function', 'getHistory is exported as function');
+    assert(typeof clearHistory === 'function', 'clearHistory is exported as function');
+
+    // Test 2: getHistory returns empty array initially
+    let history = getHistory();
+    assert(Array.isArray(history), 'getHistory returns an array');
+    assert(history.length === 0, 'getHistory returns empty array when no history');
+
+    // Test 3: Initialize history
+    initHistory();
+    const panel = document.getElementById('history-panel');
+    assert(panel !== null, 'History panel element found');
+    assert(panel.textContent.includes('No rolls yet'), 'Empty history shows placeholder message');
+
+    // Test 4: Add a roll
+    const mockRoll = {
+      id: 'test-id-1',
+      timestamp: new Date().toISOString(),
+      input: '2d6+3',
+      parsed: { dice: [{ count: 2, sides: 6 }], modifier: 3 },
+      rolls: [
+        { die: 'd6', value: 4, kept: true },
+        { die: 'd6', value: 5, kept: true }
+      ],
+      subtotal: 9,
+      modifier: 3,
+      total: 12
+    };
+
+    addRoll(mockRoll);
+    history = getHistory();
+    assert(history.length === 1, 'addRoll adds roll to history');
+    assert(history[0].id === 'test-id-1', 'Roll is stored correctly');
+    assert(panel.textContent.includes('12'), 'Panel shows total');
+    assert(panel.textContent.includes('2d6+3'), 'Panel shows notation');
+
+    // Test 5: New rolls appear at top
+    const mockRoll2 = {
+      id: 'test-id-2',
+      timestamp: new Date().toISOString(),
+      input: '1d20',
+      parsed: { dice: [{ count: 1, sides: 20 }], modifier: 0 },
+      rolls: [
+        { die: 'd20', value: 17, kept: true }
+      ],
+      subtotal: 17,
+      modifier: 0,
+      total: 17
+    };
+
+    addRoll(mockRoll2);
+    history = getHistory();
+    assert(history.length === 2, 'Second roll added to history');
+    assert(history[0].id === 'test-id-2', 'Newest roll is first in array');
+
+    // Test 6: Dropped dice shown with strikethrough
+    const advantageRoll = {
+      id: 'test-id-3',
+      timestamp: new Date().toISOString(),
+      input: '2d20kh1',
+      parsed: { dice: [{ count: 2, sides: 20 }], modifier: 0 },
+      rolls: [
+        { die: 'd20', value: 15, kept: true },
+        { die: 'd20', value: 8, kept: false, dropped: true }
+      ],
+      subtotal: 15,
+      modifier: 0,
+      total: 15
+    };
+
+    addRoll(advantageRoll);
+    const droppedElements = panel.querySelectorAll('.history-die-dropped');
+    assert(droppedElements.length > 0, 'Dropped dice have strikethrough class');
+
+    // Test 7: History limit
+    assert(getHistoryLimit() === 50, 'History limit is 50');
+
+    // Test 8: Clear history
+    clearHistory();
+    history = getHistory();
+    assert(history.length === 0, 'clearHistory empties history');
+    assert(panel.textContent.includes('No rolls yet'), 'Panel shows empty message after clear');
+
+    // Test 9: Storage persistence
+    addRoll(mockRoll);
+    const storedData = storage.get('history');
+    assert(Array.isArray(storedData), 'History is stored in localStorage');
+    assert(storedData.length === 1, 'Stored history has correct length');
+
+    // Test 10: History limit enforcement
+    storage.remove('history');
+    for (let i = 0; i < 55; i++) {
+      addRoll({
+        id: `roll-${i}`,
+        timestamp: new Date().toISOString(),
+        input: `1d6`,
+        parsed: { dice: [{ count: 1, sides: 6 }], modifier: 0 },
+        rolls: [{ die: 'd6', value: i % 6 + 1, kept: true }],
+        subtotal: i % 6 + 1,
+        modifier: 0,
+        total: i % 6 + 1
+      });
+    }
+    history = getHistory();
+    assert(history.length === 50, 'History is capped at 50 entries');
+    assert(history[0].id === 'roll-54', 'Newest roll is kept after cap');
+
+    // Test 11: Clear button exists
+    const clearBtn = panel.querySelector('.clear-history-btn');
+    assert(clearBtn !== null, 'Clear History button exists');
+    assert(clearBtn.textContent === 'Clear History', 'Clear button has correct text');
+
+    // Summary
+    const summary = document.createElement('h2');
+    summary.textContent = `Results: ${passCount} passed, ${failCount} failed`;
+    summary.style.color = failCount === 0 ? '#4ade80' : '#f87171';
+    resultsDiv.appendChild(summary);
+
+    // Clean up for demo
+    clearHistory();
+
+    // Demo button handlers
+    document.getElementById('add-roll-btn').addEventListener('click', () => {
+      addRoll({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        input: '2d6+3',
+        parsed: { dice: [{ count: 2, sides: 6 }], modifier: 3 },
+        rolls: [
+          { die: 'd6', value: Math.floor(Math.random() * 6) + 1, kept: true },
+          { die: 'd6', value: Math.floor(Math.random() * 6) + 1, kept: true }
+        ],
+        subtotal: 7,
+        modifier: 3,
+        total: 10
+      });
+    });
+
+    document.getElementById('add-advantage-btn').addEventListener('click', () => {
+      const roll1 = Math.floor(Math.random() * 20) + 1;
+      const roll2 = Math.floor(Math.random() * 20) + 1;
+      const kept = roll1 >= roll2 ? 0 : 1;
+      addRoll({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        input: '2d20kh1 (advantage)',
+        parsed: { dice: [{ count: 2, sides: 20 }], modifier: 0 },
+        rolls: [
+          { die: 'd20', value: roll1, kept: kept === 0, dropped: kept !== 0 },
+          { die: 'd20', value: roll2, kept: kept === 1, dropped: kept !== 1 }
+        ],
+        subtotal: Math.max(roll1, roll2),
+        modifier: 0,
+        total: Math.max(roll1, roll2)
+      });
+    });
+
+    document.getElementById('add-exploding-btn').addEventListener('click', () => {
+      const rolls = [{ die: 'd6', value: 6, kept: true }];
+      let explosions = 0;
+      while (rolls[rolls.length - 1].value === 6 && explosions < 3) {
+        const val = Math.floor(Math.random() * 6) + 1;
+        rolls.push({ die: 'd6', value: val, kept: true, exploded: true });
+        explosions++;
+      }
+      const total = rolls.reduce((sum, r) => sum + r.value, 0);
+      addRoll({
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        input: '1d6!',
+        parsed: { dice: [{ count: 1, sides: 6 }], modifier: 0 },
+        rolls,
+        subtotal: total,
+        modifier: 0,
+        total
+      });
+    });
+  </script>
+</body>
+</html>

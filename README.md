@@ -2,6 +2,8 @@
 
 A modern, responsive web-based dice roller for Dungeons & Dragons and other tabletop RPGs. Roll dice using standard notation, save your favorite rolls as presets, and track your roll history.
 
+**[Live Demo](https://dndd.netlify.app/)**
+
 ## Features
 
 - **Standard Dice Notation**: Support for all standard RPG dice (d4, d6, d8, d10, d12, d20, d100)
@@ -11,7 +13,7 @@ A modern, responsive web-based dice roller for Dungeons & Dragons and other tabl
 - **Presets**: Save frequently used rolls for quick access
 - **Roll History**: Track your recent rolls with timestamps
 - **Sound Effects**: Optional dice rolling sound
-- **Animated Dice**: Visual rolling animation with critical hit/miss highlighting
+- **3D Animated Dice**: CSS 3D polyhedra (tetrahedron, cube, octahedron, dodecahedron, icosahedron) with tumbling animations and critical hit/miss highlighting
 - **Dark Theme**: Easy on the eyes with a deep navy and red accent color scheme
 - **Mobile Responsive**: Fully functional on mobile devices with touch-friendly controls
 - **Keyboard Accessible**: Full keyboard navigation support with visible focus states
@@ -127,7 +129,8 @@ Works in all modern browsers:
 ├── css/
 │   ├── styles.css      # Main styles
 │   ├── theme.css       # CSS custom properties (colors, spacing)
-│   └── animations.css  # Dice rolling animations
+│   ├── animations.css  # Dice rolling animations
+│   └── dice3d.css      # 3D polyhedra dice shapes
 ├── js/
 │   ├── main.js         # Application entry point
 │   ├── parser.js       # Dice notation parser

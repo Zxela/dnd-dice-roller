@@ -1,157 +1,178 @@
 /**
- * Animator Module - 3D Dice Version
- * Creates real 3D CSS dice that tumble and land showing the result.
+ * Animator Module - 3D Polyhedra Dice
+ * Creates proper geometric dice shapes that tumble and reveal results on landing.
+ * d4=tetrahedron, d6=cube, d8=octahedron, d10=trapezohedron, d12=dodecahedron, d20=icosahedron
  */
+
+const BASE_ANIMATION_DURATION = 1800; // 1.8s for more dramatic tumble
+const STAGGER_DELAY = 200; // 200ms between dice
 
 /**
- * Animation timing constants
+ * Creates a D4 tetrahedron shape
+ * @returns {HTMLElement}
  */
-const BASE_ANIMATION_DURATION = 1500; // 1.5s base animation
-const STAGGER_DELAY = 150; // 150ms between dice for 3D effect
+function createD4Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
 
-/**
- * Creates pip elements for a d6 face
- * @param {number} count - Number of pips (1-6)
- * @returns {string} HTML string for pips
- */
-function createPips(count) {
-  return Array(count).fill('<span class="pip"></span>').join('');
-}
-
-/**
- * Creates a 3D d6 cube with pip faces
- * @returns {HTMLElement} The cube element with all 6 pip faces
- */
-function createD6Cube() {
-  const cube = document.createElement('div');
-  cube.className = 'die-cube';
-
-  // Create 6 faces with correct pip counts
-  // Opposite faces sum to 7: 1-6, 2-5, 3-4
-  const faceConfigs = [
-    { face: 1, pips: 1 },  // Front
-    { face: 2, pips: 6 },  // Back (opposite of 1)
-    { face: 3, pips: 2 },  // Right
-    { face: 4, pips: 5 },  // Left (opposite of 2... wait, let me recalculate)
-    { face: 5, pips: 3 },  // Top
-    { face: 6, pips: 4 },  // Bottom (opposite of 3)
-  ];
-
-  // Standard d6: 1 opposite 6, 2 opposite 5, 3 opposite 4
-  const pipCounts = [1, 6, 2, 5, 3, 4]; // faces 1-6 as positioned
-
-  for (let i = 0; i < 6; i++) {
+  // 4 triangular faces
+  for (let i = 1; i <= 4; i++) {
     const face = document.createElement('div');
-    face.className = `die-face die-face-${i + 1}`;
-    face.innerHTML = createPips(pipCounts[i]);
-    face.dataset.value = pipCounts[i];
-    cube.appendChild(face);
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
   }
 
-  return cube;
+  return shape;
 }
 
 /**
- * Creates a generic numbered die cube
- * @param {number} sides - Number of sides
- * @param {number} value - The result value to show
- * @returns {HTMLElement} The cube element
+ * Creates a D6 cube with pip faces
+ * @returns {HTMLElement}
  */
-function createNumberedCube(sides, value) {
-  const cube = document.createElement('div');
-  cube.className = 'die-cube';
+function createD6Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
 
-  // Create 6 faces with numbers spread around
-  // Face 1 (front) will show the result
-  const numbers = generateFaceNumbers(sides, value);
+  // Standard d6: opposite faces sum to 7
+  // Face positions: 1-front, 6-back, 3-right, 4-left, 2-top, 5-bottom
+  const pipCounts = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 };
 
-  for (let i = 0; i < 6; i++) {
+  for (let faceNum = 1; faceNum <= 6; faceNum++) {
     const face = document.createElement('div');
-    face.className = `die-face die-face-${i + 1}`;
-    face.textContent = numbers[i];
-    face.dataset.value = numbers[i];
-    cube.appendChild(face);
+    face.className = `face face-${faceNum}`;
+
+    // Add pips
+    const numPips = pipCounts[faceNum];
+    for (let p = 0; p < numPips; p++) {
+      const pip = document.createElement('span');
+      pip.className = 'pip';
+      face.appendChild(pip);
+    }
+
+    shape.appendChild(face);
   }
 
-  return cube;
+  return shape;
 }
 
 /**
- * Generates numbers for cube faces with result on front face
- * @param {number} sides - Number of sides on the die
- * @param {number} value - The result value (will be on front face)
- * @returns {number[]} Array of 6 numbers for each face
+ * Creates a D8 octahedron shape
+ * @returns {HTMLElement}
  */
-function generateFaceNumbers(sides, value) {
-  // Put result on face 1 (front, which will face up after rotation)
-  const numbers = [value];
+function createD8Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
 
-  // Fill other faces with random other numbers from the die
-  const otherNumbers = [];
-  for (let i = 1; i <= sides; i++) {
-    if (i !== value) otherNumbers.push(i);
+  // 8 triangular faces
+  for (let i = 1; i <= 8; i++) {
+    const face = document.createElement('div');
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
   }
 
-  // Shuffle and take 5 for the other faces
-  for (let i = otherNumbers.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [otherNumbers[i], otherNumbers[j]] = [otherNumbers[j], otherNumbers[i]];
-  }
-
-  // Add 5 more numbers (cycling if needed)
-  for (let i = 0; i < 5; i++) {
-    numbers.push(otherNumbers[i % otherNumbers.length] || (i + 1));
-  }
-
-  return numbers;
+  return shape;
 }
 
 /**
- * Gets the final rotation to show a specific d6 face
- * @param {number} value - The value to show (1-6)
- * @returns {Object} Rotation values {x, y, z}
+ * Creates a D10 shape (pentagonal trapezohedron)
+ * @returns {HTMLElement}
  */
-function getD6Rotation(value) {
-  // Map d6 values to rotations that show that face on top
-  // Based on our cube face positions
-  const rotations = {
-    1: { x: -90, y: 0, z: 0 },     // Front face up
-    2: { x: 0, y: -90, z: 0 },     // Right face up
-    3: { x: 0, y: 0, z: 0 },       // Top face up
-    4: { x: 180, y: 0, z: 0 },     // Bottom face up
-    5: { x: 0, y: 90, z: 0 },      // Left face up
-    6: { x: 90, y: 0, z: 0 },      // Back face up
-  };
-  return rotations[value] || { x: 0, y: 0, z: 0 };
+function createD10Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
+
+  // 10 kite-shaped faces
+  for (let i = 1; i <= 10; i++) {
+    const face = document.createElement('div');
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
+  }
+
+  return shape;
 }
 
 /**
- * Gets a rotation that shows the front face (where result is)
- * @param {number} value - Used to add some visual variety
- * @returns {Object} Rotation values {x, y, z}
+ * Creates a D12 dodecahedron shape
+ * @returns {HTMLElement}
  */
-function getGenericRotation(value) {
-  // Front face (with result) needs to face the viewer
-  // Add some variety based on value
-  const baseRotations = [
-    { x: -90, y: 0, z: 0 },
-    { x: -90, y: 15, z: 0 },
-    { x: -90, y: -15, z: 0 },
-    { x: -90, y: 0, z: 15 },
-    { x: -90, y: 0, z: -15 },
+function createD12Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
+
+  // 12 pentagonal faces
+  for (let i = 1; i <= 12; i++) {
+    const face = document.createElement('div');
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
+  }
+
+  return shape;
+}
+
+/**
+ * Creates a D20 icosahedron shape
+ * @returns {HTMLElement}
+ */
+function createD20Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
+
+  // 20 triangular faces
+  for (let i = 1; i <= 20; i++) {
+    const face = document.createElement('div');
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
+  }
+
+  return shape;
+}
+
+/**
+ * Creates a D100 shape (similar to d10)
+ * @returns {HTMLElement}
+ */
+function createD100Shape() {
+  const shape = document.createElement('div');
+  shape.className = 'die-shape';
+
+  // 10 faces like d10
+  for (let i = 1; i <= 10; i++) {
+    const face = document.createElement('div');
+    face.className = `face face-${i}`;
+    shape.appendChild(face);
+  }
+
+  return shape;
+}
+
+/**
+ * Gets random end rotation for the tumble animation
+ * @returns {Object} {rx, ry, rz} in degrees
+ */
+function getRandomEndRotation() {
+  // End with a stable-looking rotation
+  const rotations = [
+    { rx: 0, ry: 0, rz: 0 },
+    { rx: 0, ry: 90, rz: 0 },
+    { rx: 0, ry: 180, rz: 0 },
+    { rx: 0, ry: 270, rz: 0 },
+    { rx: 90, ry: 0, rz: 0 },
+    { rx: -90, ry: 0, rz: 0 },
+    { rx: 45, ry: 45, rz: 0 },
+    { rx: -45, ry: 45, rz: 0 },
   ];
-  return baseRotations[value % baseRotations.length];
+  return rotations[Math.floor(Math.random() * rotations.length)];
 }
 
 /**
  * Creates a complete 3D die element
  * @param {Object} roll - Roll object with die, value, kept, dropped properties
  * @param {number} index - Index for staggered animation delay
- * @returns {HTMLElement} Complete 3D die element
+ * @returns {HTMLElement}
  */
 function create3DDie(roll, index) {
-  const wrapper = document.createElement('div');
   const sides = parseInt(roll.die.replace('d', ''));
+  const wrapper = document.createElement('div');
 
   wrapper.className = `die-3d die-${roll.die}`;
   wrapper.setAttribute('role', 'img');
@@ -159,64 +180,72 @@ function create3DDie(roll, index) {
   wrapper.dataset.die = roll.die;
   wrapper.dataset.value = roll.value;
 
-  // Set animation delay
+  // Set staggered animation delay
   wrapper.style.setProperty('--animation-delay', `${index * STAGGER_DELAY / 1000}s`);
 
-  // Create the cube
-  let cube;
-  if (sides === 6) {
-    cube = createD6Cube();
-    wrapper.classList.add('die-d6');
-    const rot = getD6Rotation(roll.value);
-    wrapper.style.setProperty('--final-x', `${rot.x}deg`);
-    wrapper.style.setProperty('--final-y', `${rot.y}deg`);
-    wrapper.style.setProperty('--final-z', `${rot.z}deg`);
-  } else {
-    cube = createNumberedCube(sides, roll.value);
-    // Add die-specific class for styling
-    if (sides === 4) wrapper.classList.add('die-d4');
-    else if (sides === 8) wrapper.classList.add('die-d8');
-    else if (sides === 10) wrapper.classList.add('die-d10');
-    else if (sides === 12) wrapper.classList.add('die-d12');
-    else if (sides === 20) wrapper.classList.add('die-d20');
-    else if (sides === 100) wrapper.classList.add('die-d100');
+  // Set random end rotation for visual variety
+  const endRot = getRandomEndRotation();
+  wrapper.style.setProperty('--end-rx', `${endRot.rx}deg`);
+  wrapper.style.setProperty('--end-ry', `${endRot.ry}deg`);
+  wrapper.style.setProperty('--end-rz', `${endRot.rz}deg`);
 
-    const rot = getGenericRotation(roll.value);
-    wrapper.style.setProperty('--final-x', `${rot.x}deg`);
-    wrapper.style.setProperty('--final-y', `${rot.y}deg`);
-    wrapper.style.setProperty('--final-z', `${rot.z}deg`);
+  // Create the appropriate shape
+  let shape;
+  switch (sides) {
+    case 4:
+      shape = createD4Shape();
+      break;
+    case 6:
+      shape = createD6Shape();
+      break;
+    case 8:
+      shape = createD8Shape();
+      break;
+    case 10:
+      shape = createD10Shape();
+      break;
+    case 12:
+      shape = createD12Shape();
+      break;
+    case 20:
+      shape = createD20Shape();
+      break;
+    case 100:
+      shape = createD100Shape();
+      break;
+    default:
+      // Fallback to d6-style cube for unknown dice
+      shape = createD6Shape();
   }
 
-  wrapper.appendChild(cube);
+  wrapper.appendChild(shape);
 
-  // Add result overlay for non-d6 dice (shows after animation)
+  // Add result overlay (hidden until animation completes)
+  // For d6, we don't need an overlay since pips show the value
   if (sides !== 6) {
     const resultOverlay = document.createElement('div');
-    resultOverlay.className = 'result-value';
+    resultOverlay.className = 'result-overlay';
     resultOverlay.textContent = roll.value;
     wrapper.appendChild(resultOverlay);
   }
 
-  // Start rolling animation
+  // Start rolling
   wrapper.classList.add('rolling');
 
   return wrapper;
 }
 
 /**
- * Applies result state to a 3D die after animation
- * @param {HTMLElement} dieElement - The 3D die element
- * @param {Object} roll - Roll object
+ * Applies result state to die after animation
+ * @param {HTMLElement} dieElement
+ * @param {Object} roll
  */
-function apply3DResultState(dieElement, roll) {
+function applyResultState(dieElement, roll) {
   dieElement.classList.remove('rolling');
-  dieElement.classList.add('result');
-  dieElement.classList.add('show-result');
+  dieElement.classList.add('landed', 'show-result');
 
-  // Update aria-label with result
   dieElement.setAttribute('aria-label', `${roll.die} rolled ${roll.value}`);
 
-  // Apply state classes
   if (roll.dropped) {
     dieElement.classList.add('dropped');
     dieElement.setAttribute('aria-label', `${roll.die} rolled ${roll.value} (dropped)`);
@@ -225,35 +254,30 @@ function apply3DResultState(dieElement, roll) {
   if (roll.die === 'd20') {
     if (roll.value === 20) {
       dieElement.classList.add('nat20');
-      dieElement.setAttribute('aria-label', `${roll.die} rolled ${roll.value} - Critical Success!`);
+      dieElement.setAttribute('aria-label', `Natural 20! Critical Success!`);
     } else if (roll.value === 1) {
       dieElement.classList.add('nat1');
-      dieElement.setAttribute('aria-label', `${roll.die} rolled ${roll.value} - Critical Failure!`);
+      dieElement.setAttribute('aria-label', `Natural 1! Critical Failure!`);
     }
   }
 }
 
 /**
- * Builds the breakdown string showing the calculation.
- * @param {Object} rollResult - The complete roll result object
- * @returns {string} Breakdown string
+ * Builds breakdown string showing calculation
+ * @param {Object} rollResult
+ * @returns {string}
  */
 function buildBreakdownString(rollResult) {
   const { rolls, modifier, total } = rollResult;
 
-  const keptValues = rolls
-    .filter(roll => roll.kept)
-    .map(roll => roll.value);
-
-  const droppedValues = rolls
-    .filter(roll => roll.dropped)
-    .map(roll => roll.value);
+  const keptValues = rolls.filter(r => r.kept).map(r => r.value);
+  const droppedValues = rolls.filter(r => r.dropped).map(r => r.value);
 
   let breakdown = '';
 
   if (keptValues.length > 0) {
-    const diceSum = keptValues.join('+');
-    breakdown = keptValues.length > 1 ? `(${diceSum})` : diceSum;
+    const sum = keptValues.join('+');
+    breakdown = keptValues.length > 1 ? `(${sum})` : sum;
   } else {
     breakdown = '0';
   }
@@ -272,30 +296,26 @@ function buildBreakdownString(rollResult) {
 }
 
 /**
- * Updates the total display with the final result.
- * @param {number} total - The total roll value
+ * Updates total display
+ * @param {number} total
  */
 function updateTotalDisplay(total) {
-  const totalElement = document.querySelector('.total-value');
-  if (totalElement) {
-    totalElement.textContent = total;
-  }
+  const el = document.querySelector('.total-value');
+  if (el) el.textContent = total;
 }
 
 /**
- * Updates the breakdown display showing the calculation.
- * @param {Object} rollResult - The complete roll result object
+ * Updates breakdown display
+ * @param {Object} rollResult
  */
 function updateBreakdownDisplay(rollResult) {
-  const breakdownElement = document.querySelector('.roll-breakdown');
-  if (breakdownElement) {
-    breakdownElement.textContent = buildBreakdownString(rollResult);
-  }
+  const el = document.querySelector('.roll-breakdown');
+  if (el) el.textContent = buildBreakdownString(rollResult);
 }
 
 /**
- * Clears the dice container
- * @param {HTMLElement} container - The dice container element
+ * Clears container
+ * @param {HTMLElement} container
  */
 function clearContainer(container) {
   while (container.firstChild) {
@@ -304,10 +324,10 @@ function clearContainer(container) {
 }
 
 /**
- * Animates a dice roll with 3D tumbling dice.
- * @param {Object} rollResult - The complete roll result object from roller.js
+ * Animates dice roll with 3D tumbling polyhedra
+ * @param {Object} rollResult - Complete roll result from roller.js
  * @param {HTMLElement} [container] - Optional container element
- * @returns {Promise<void>} Promise that resolves when animation completes
+ * @returns {Promise<void>}
  */
 export function animateRoll(rollResult, container) {
   return new Promise((resolve) => {
@@ -321,22 +341,16 @@ export function animateRoll(rollResult, container) {
 
     const { rolls } = rollResult;
 
-    // Clear existing dice
     clearContainer(diceContainer);
 
-    // Reset total display during animation
-    const totalElement = document.querySelector('.total-value');
-    if (totalElement) {
-      totalElement.textContent = '...';
-    }
+    // Show loading state
+    const totalEl = document.querySelector('.total-value');
+    if (totalEl) totalEl.textContent = '...';
 
-    // Reset breakdown during animation
-    const breakdownElement = document.querySelector('.roll-breakdown');
-    if (breakdownElement) {
-      breakdownElement.textContent = 'Rolling...';
-    }
+    const breakdownEl = document.querySelector('.roll-breakdown');
+    if (breakdownEl) breakdownEl.textContent = 'Rolling...';
 
-    // Create 3D dice with staggered animations
+    // Create 3D dice
     const dieElements = rolls.map((roll, index) => {
       const dieElement = create3DDie(roll, index);
       diceContainer.appendChild(dieElement);
@@ -344,27 +358,26 @@ export function animateRoll(rollResult, container) {
     });
 
     // Calculate total animation time
-    const totalAnimationTime = BASE_ANIMATION_DURATION + (rolls.length - 1) * STAGGER_DELAY + 100;
+    const totalTime = BASE_ANIMATION_DURATION + (rolls.length - 1) * STAGGER_DELAY + 100;
 
-    // Apply result states after animations complete
+    // Reveal results after animation
     setTimeout(() => {
       dieElements.forEach(({ element, roll }) => {
-        apply3DResultState(element, roll);
+        applyResultState(element, roll);
       });
 
-      // Update total and breakdown displays
       updateTotalDisplay(rollResult.total);
       updateBreakdownDisplay(rollResult);
 
       resolve();
-    }, totalAnimationTime);
+    }, totalTime);
   });
 }
 
 /**
- * Displays a roll result instantly without animation.
- * @param {Object} rollResult - The complete roll result object from roller.js
- * @param {HTMLElement} [container] - Optional container element
+ * Displays roll result instantly without animation
+ * @param {Object} rollResult
+ * @param {HTMLElement} [container]
  */
 export function displayResult(rollResult, container) {
   const diceContainer = container || document.querySelector('.dice-container');
@@ -374,34 +387,21 @@ export function displayResult(rollResult, container) {
     return;
   }
 
-  const { rolls } = rollResult;
-
-  // Clear existing dice
   clearContainer(diceContainer);
 
-  // Create dice without animation
-  rolls.forEach((roll, index) => {
+  rollResult.rolls.forEach((roll, index) => {
     const dieElement = create3DDie(roll, index);
     dieElement.classList.remove('rolling');
-    dieElement.classList.add('result', 'show-result');
-
-    // Set final rotation immediately
+    dieElement.classList.add('show-result');
     dieElement.style.animation = 'none';
 
-    if (roll.dropped) {
-      dieElement.classList.add('dropped');
-    }
-    if (roll.die === 'd20' && roll.value === 20) {
-      dieElement.classList.add('nat20');
-    }
-    if (roll.die === 'd20' && roll.value === 1) {
-      dieElement.classList.add('nat1');
-    }
+    if (roll.dropped) dieElement.classList.add('dropped');
+    if (roll.die === 'd20' && roll.value === 20) dieElement.classList.add('nat20');
+    if (roll.die === 'd20' && roll.value === 1) dieElement.classList.add('nat1');
 
     diceContainer.appendChild(dieElement);
   });
 
-  // Update displays immediately
   updateTotalDisplay(rollResult.total);
   updateBreakdownDisplay(rollResult);
 }

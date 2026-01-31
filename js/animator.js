@@ -1,24 +1,115 @@
 /**
  * Animator Module - 3D Polyhedra Dice
- * Creates proper geometric dice shapes that tumble and reveal results on landing.
+ * Creates proper geometric dice shapes with numbered faces that tumble and land on result.
  * d4=tetrahedron, d6=cube, d8=octahedron, d10=trapezohedron, d12=dodecahedron, d20=icosahedron
  */
 
-const BASE_ANIMATION_DURATION = 1800; // 1.8s for more dramatic tumble
-const STAGGER_DELAY = 200; // 200ms between dice
+const BASE_ANIMATION_DURATION = 1800;
+const STAGGER_DELAY = 200;
 
 /**
- * Creates a D4 tetrahedron shape
+ * Face rotation mappings - maps each face value to the rotation needed to show it
+ * These are calculated based on the CSS face positions
+ */
+const FACE_ROTATIONS = {
+  d4: {
+    1: { rx: -19.47, ry: 0, rz: 0 },
+    2: { rx: -19.47, ry: -120, rz: 0 },
+    3: { rx: -19.47, ry: -240, rz: 0 },
+    4: { rx: -90, ry: 0, rz: 0 }
+  },
+  d6: {
+    1: { rx: 0, ry: 0, rz: 0 },
+    2: { rx: 90, ry: 0, rz: 0 },
+    3: { rx: 0, ry: 90, rz: 0 },
+    4: { rx: 0, ry: -90, rz: 0 },
+    5: { rx: -90, ry: 0, rz: 0 },
+    6: { rx: 0, ry: 180, rz: 0 }
+  },
+  d8: {
+    1: { rx: -35.26, ry: 0, rz: 0 },
+    2: { rx: -35.26, ry: -90, rz: 0 },
+    3: { rx: -35.26, ry: -180, rz: 0 },
+    4: { rx: -35.26, ry: -270, rz: 0 },
+    5: { rx: -144.74, ry: -45, rz: 0 },
+    6: { rx: -144.74, ry: -135, rz: 0 },
+    7: { rx: -144.74, ry: -225, rz: 0 },
+    8: { rx: -144.74, ry: -315, rz: 0 }
+  },
+  d10: {
+    0: { rx: -40, ry: 0, rz: 0 },
+    1: { rx: -40, ry: -72, rz: 0 },
+    2: { rx: -40, ry: -144, rz: 0 },
+    3: { rx: -40, ry: -216, rz: 0 },
+    4: { rx: -40, ry: -288, rz: 0 },
+    5: { rx: -140, ry: -36, rz: 0 },
+    6: { rx: -140, ry: -108, rz: 0 },
+    7: { rx: -140, ry: -180, rz: 0 },
+    8: { rx: -140, ry: -252, rz: 0 },
+    9: { rx: -140, ry: -324, rz: 0 }
+  },
+  d12: {
+    1: { rx: -90, ry: 0, rz: 0 },
+    2: { rx: -26.57, ry: 0, rz: 0 },
+    3: { rx: -26.57, ry: -72, rz: 0 },
+    4: { rx: -26.57, ry: -144, rz: 0 },
+    5: { rx: -26.57, ry: -216, rz: 0 },
+    6: { rx: -26.57, ry: -288, rz: 0 },
+    7: { rx: -153.43, ry: -36, rz: 0 },
+    8: { rx: -153.43, ry: -108, rz: 0 },
+    9: { rx: -153.43, ry: -180, rz: 0 },
+    10: { rx: -153.43, ry: -252, rz: 0 },
+    11: { rx: -153.43, ry: -324, rz: 0 },
+    12: { rx: 90, ry: 0, rz: 0 }
+  },
+  d20: {
+    1: { rx: -20.9, ry: 0, rz: 0 },
+    2: { rx: -20.9, ry: -72, rz: 0 },
+    3: { rx: -20.9, ry: -144, rz: 0 },
+    4: { rx: -20.9, ry: -216, rz: 0 },
+    5: { rx: -20.9, ry: -288, rz: 0 },
+    6: { rx: -58.28, ry: -36, rz: 0 },
+    7: { rx: -58.28, ry: -108, rz: 0 },
+    8: { rx: -58.28, ry: -180, rz: 0 },
+    9: { rx: -58.28, ry: -252, rz: 0 },
+    10: { rx: -58.28, ry: -324, rz: 0 },
+    11: { rx: -121.72, ry: 0, rz: 0 },
+    12: { rx: -121.72, ry: -72, rz: 0 },
+    13: { rx: -121.72, ry: -144, rz: 0 },
+    14: { rx: -121.72, ry: -216, rz: 0 },
+    15: { rx: -121.72, ry: -288, rz: 0 },
+    16: { rx: -159.1, ry: -36, rz: 0 },
+    17: { rx: -159.1, ry: -108, rz: 0 },
+    18: { rx: -159.1, ry: -180, rz: 0 },
+    19: { rx: -159.1, ry: -252, rz: 0 },
+    20: { rx: -159.1, ry: -324, rz: 0 }
+  },
+  d100: {
+    0: { rx: -40, ry: 0, rz: 0 },
+    10: { rx: -40, ry: -72, rz: 0 },
+    20: { rx: -40, ry: -144, rz: 0 },
+    30: { rx: -40, ry: -216, rz: 0 },
+    40: { rx: -40, ry: -288, rz: 0 },
+    50: { rx: -140, ry: -36, rz: 0 },
+    60: { rx: -140, ry: -108, rz: 0 },
+    70: { rx: -140, ry: -180, rz: 0 },
+    80: { rx: -140, ry: -252, rz: 0 },
+    90: { rx: -140, ry: -324, rz: 0 }
+  }
+};
+
+/**
+ * Creates a D4 tetrahedron with numbered faces
  * @returns {HTMLElement}
  */
 function createD4Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 4 triangular faces
   for (let i = 1; i <= 4; i++) {
     const face = document.createElement('div');
     face.className = `face face-${i}`;
+    face.dataset.value = i;
     shape.appendChild(face);
   }
 
@@ -33,15 +124,12 @@ function createD6Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // Standard d6: opposite faces sum to 7
-  // Face positions: 1-front, 6-back, 3-right, 4-left, 2-top, 5-bottom
   const pipCounts = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 };
 
   for (let faceNum = 1; faceNum <= 6; faceNum++) {
     const face = document.createElement('div');
     face.className = `face face-${faceNum}`;
 
-    // Add pips
     const numPips = pipCounts[faceNum];
     for (let p = 0; p < numPips; p++) {
       const pip = document.createElement('span');
@@ -56,17 +144,17 @@ function createD6Shape() {
 }
 
 /**
- * Creates a D8 octahedron shape
+ * Creates a D8 octahedron with numbered faces
  * @returns {HTMLElement}
  */
 function createD8Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 8 triangular faces
   for (let i = 1; i <= 8; i++) {
     const face = document.createElement('div');
     face.className = `face face-${i}`;
+    face.dataset.value = i;
     shape.appendChild(face);
   }
 
@@ -74,17 +162,17 @@ function createD8Shape() {
 }
 
 /**
- * Creates a D10 shape (pentagonal trapezohedron)
+ * Creates a D10 with numbered faces (0-9)
  * @returns {HTMLElement}
  */
 function createD10Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 10 kite-shaped faces
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 0; i <= 9; i++) {
     const face = document.createElement('div');
     face.className = `face face-${i}`;
+    face.dataset.value = i;
     shape.appendChild(face);
   }
 
@@ -92,17 +180,17 @@ function createD10Shape() {
 }
 
 /**
- * Creates a D12 dodecahedron shape
+ * Creates a D12 dodecahedron with numbered faces
  * @returns {HTMLElement}
  */
 function createD12Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 12 pentagonal faces
   for (let i = 1; i <= 12; i++) {
     const face = document.createElement('div');
     face.className = `face face-${i}`;
+    face.textContent = i;
     shape.appendChild(face);
   }
 
@@ -110,17 +198,17 @@ function createD12Shape() {
 }
 
 /**
- * Creates a D20 icosahedron shape
+ * Creates a D20 icosahedron with numbered faces
  * @returns {HTMLElement}
  */
 function createD20Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 20 triangular faces
   for (let i = 1; i <= 20; i++) {
     const face = document.createElement('div');
     face.className = `face face-${i}`;
+    face.dataset.value = i;
     shape.appendChild(face);
   }
 
@@ -128,17 +216,19 @@ function createD20Shape() {
 }
 
 /**
- * Creates a D100 shape (similar to d10)
+ * Creates a D100 (percentile) with faces showing 00-90
  * @returns {HTMLElement}
  */
 function createD100Shape() {
   const shape = document.createElement('div');
   shape.className = 'die-shape';
 
-  // 10 faces like d10
-  for (let i = 1; i <= 10; i++) {
+  const values = ['00', '10', '20', '30', '40', '50', '60', '70', '80', '90'];
+
+  for (const val of values) {
     const face = document.createElement('div');
-    face.className = `face face-${i}`;
+    face.className = `face face-${val}`;
+    face.dataset.value = val;
     shape.appendChild(face);
   }
 
@@ -146,22 +236,49 @@ function createD100Shape() {
 }
 
 /**
- * Gets random end rotation for the tumble animation
+ * Gets the rotation to show a specific face value
+ * @param {string} dieType - 'd4', 'd6', etc.
+ * @param {number} value - The face value to show
  * @returns {Object} {rx, ry, rz} in degrees
  */
-function getRandomEndRotation() {
-  // End with a stable-looking rotation
-  const rotations = [
-    { rx: 0, ry: 0, rz: 0 },
-    { rx: 0, ry: 90, rz: 0 },
-    { rx: 0, ry: 180, rz: 0 },
-    { rx: 0, ry: 270, rz: 0 },
-    { rx: 90, ry: 0, rz: 0 },
-    { rx: -90, ry: 0, rz: 0 },
-    { rx: 45, ry: 45, rz: 0 },
-    { rx: -45, ry: 45, rz: 0 },
-  ];
-  return rotations[Math.floor(Math.random() * rotations.length)];
+function getRotationForValue(dieType, value) {
+  const rotations = FACE_ROTATIONS[dieType];
+
+  if (!rotations) {
+    // Fallback for unknown dice
+    return { rx: 0, ry: 0, rz: 0 };
+  }
+
+  // Handle d10 showing 1-10 but faces are 0-9
+  let lookupValue = value;
+  if (dieType === 'd10') {
+    lookupValue = value === 10 ? 0 : value;
+  }
+
+  // Handle d100 - value comes in as 1-100, need to map to tens
+  if (dieType === 'd100') {
+    // Get the tens digit (00, 10, 20, ... 90)
+    lookupValue = Math.floor((value - 1) / 10) * 10;
+    if (value === 100) lookupValue = 0;
+  }
+
+  const rotation = rotations[lookupValue];
+
+  if (!rotation) {
+    // Random fallback
+    return {
+      rx: Math.floor(Math.random() * 4) * 90,
+      ry: Math.floor(Math.random() * 4) * 90,
+      rz: 0
+    };
+  }
+
+  // Add some full rotations for dramatic effect
+  return {
+    rx: rotation.rx + 720,
+    ry: rotation.ry,
+    rz: rotation.rz
+  };
 }
 
 /**
@@ -183,8 +300,8 @@ function create3DDie(roll, index) {
   // Set staggered animation delay
   wrapper.style.setProperty('--animation-delay', `${index * STAGGER_DELAY / 1000}s`);
 
-  // Set random end rotation for visual variety
-  const endRot = getRandomEndRotation();
+  // Get the rotation to show the result value
+  const endRot = getRotationForValue(roll.die, roll.value);
   wrapper.style.setProperty('--end-rx', `${endRot.rx}deg`);
   wrapper.style.setProperty('--end-ry', `${endRot.ry}deg`);
   wrapper.style.setProperty('--end-rz', `${endRot.rz}deg`);
@@ -220,15 +337,6 @@ function create3DDie(roll, index) {
 
   wrapper.appendChild(shape);
 
-  // Add result overlay (hidden until animation completes)
-  // For d6, we don't need an overlay since pips show the value
-  if (sides !== 6) {
-    const resultOverlay = document.createElement('div');
-    resultOverlay.className = 'result-overlay';
-    resultOverlay.textContent = roll.value;
-    wrapper.appendChild(resultOverlay);
-  }
-
   // Start rolling
   wrapper.classList.add('rolling');
 
@@ -242,7 +350,7 @@ function create3DDie(roll, index) {
  */
 function applyResultState(dieElement, roll) {
   dieElement.classList.remove('rolling');
-  dieElement.classList.add('landed', 'show-result');
+  dieElement.classList.add('landed');
 
   dieElement.setAttribute('aria-label', `${roll.die} rolled ${roll.value}`);
 
@@ -392,8 +500,11 @@ export function displayResult(rollResult, container) {
   rollResult.rolls.forEach((roll, index) => {
     const dieElement = create3DDie(roll, index);
     dieElement.classList.remove('rolling');
-    dieElement.classList.add('show-result');
+    dieElement.classList.add('landed');
     dieElement.style.animation = 'none';
+
+    // Apply the final rotation immediately
+    dieElement.style.transform = `rotateX(var(--end-rx)) rotateY(var(--end-ry)) rotateZ(var(--end-rz))`;
 
     if (roll.dropped) dieElement.classList.add('dropped');
     if (roll.die === 'd20' && roll.value === 20) dieElement.classList.add('nat20');
